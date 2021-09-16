@@ -28,24 +28,25 @@ pipeline {
 
     stage('Deploy Staging') {
       steps {
-        echo 'Deploy to staging environment '
+        echo 'Deploy to staging environment'
+        input 'Ok to deploy to production?'
       }
     }
 
     stage('Deploy Production') {
-      steps {
-        echo 'Deploy to production environment '
+      post {
+        always {
+          archiveArtifacts(artifacts: 'target/demoapp.jar', fingerprint: true)
+        }
+
+        failure {
+          emailext(subject: 'Demoapp build failure', to: 'ci-team@example.com', body: 'Build failure for demoapp Build ${env.JOB_NAME} ')
+        }
+
       }
-    }
-
-  }
-  post {
-    always {
-      archiveArtifacts(artifacts: 'target/demoapp.jar', fingerprint: true)
-    }
-
-    failure {
-      mail(to: 'ci-team@example.com', subject: "Failed Pipeline ${currentBuild.fullDisplayName}", body: " For details about the failure, see ${env.BUILD_URL}")
+      steps {
+        echo 'Deploy to Prod'
+      }
     }
 
   }
